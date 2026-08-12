@@ -6,8 +6,10 @@ Based on the official [Qumulo API introduction](https://github.com/Qumulo/qumulo
 
 ## Quick start
 
+### Windows (PowerShell)
+
 ```powershell
-cd d:\VSCode-Projects\resilience-platform
+cd C:\path\to\resilience-platform
 python -m venv .venv
 
 # Option A (recommended): allow local scripts for your user account only
@@ -35,13 +37,48 @@ If `Activate.ps1` is blocked, you can also use **Command Prompt** instead of Pow
 .venv\Scripts\activate.bat
 ```
 
+### Linux (Ubuntu)
+
+Recommended one-shot bootstrap:
+
+```bash
+cd /path/to/resilience-platform
+chmod +x scripts/setup_ubuntu.sh scripts/run_offline_checks.sh
+./scripts/setup_ubuntu.sh
+source .venv/bin/activate
+./scripts/run_offline_checks.sh
+```
+
+Or set up manually:
+
+```bash
+cd /path/to/resilience-platform
+
+sudo apt-get update
+sudo apt-get install -y python3 python3-venv python3-pip
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+
+# Offline tests (default — no cluster required)
+pytest tests/unit tests/rest -v
+
+# Lint and type check
+ruff check src tests
+mypy src
+```
+
+Add `--protocols` to `setup_ubuntu.sh` to install `nfs-common` and `cifs-utils` for live NFS/SMB testing on bare metal.
+
 Example offline run (14 unit + REST contract tests):
 
 ![Offline pytest run — 14 passed](resilience-platform-testing-001.png)
 
 ## Install Qumulo SDK
 
-The project depends on `qumulo-api` (includes the `qq` CLI). Pin to your cluster Core version when needed:
+The project depends on `qumulo-api` (includes the `qq` CLI). Pin to your cluster Core version when needed. Project settings use `QUMULO_*` variable names (see [`.env.example`](.env.example)); the examples below use `API_*` names as in the official qq CLI docs.
+
+### Windows (PowerShell)
 
 ```powershell
 pip install "qumulo-api==7.9.2.1"
@@ -55,6 +92,22 @@ $env:API_USER = "admin"
 $env:API_PASSWORD = "***"
 qq --host $env:API_HOSTNAME login -u $env:API_USER -p $env:API_PASSWORD
 qq --host $env:API_HOSTNAME fs_get_stats
+```
+
+### Linux (Ubuntu)
+
+```bash
+pip install "qumulo-api==7.9.2.1"
+```
+
+Verify connectivity:
+
+```bash
+export API_HOSTNAME="your-cluster"
+export API_USER="admin"
+export API_PASSWORD="***"
+qq --host "$API_HOSTNAME" login -u "$API_USER" -p "$API_PASSWORD"
+qq --host "$API_HOSTNAME" fs_get_stats
 ```
 
 ## Safety gates (live tests)
@@ -72,7 +125,16 @@ Copy [`.env.example`](.env.example) to `.env` and fill in cluster credentials lo
 
 Preflight check:
 
+### Windows (PowerShell)
+
 ```powershell
+pip install -e .
+resilience-preflight
+```
+
+### Linux (Ubuntu)
+
+```bash
 pip install -e .
 resilience-preflight
 ```
@@ -99,6 +161,8 @@ Three scenarios in [`tests/rest/locust/locustfile.py`](tests/rest/locust/locustf
 | `openmetrics` | OpenMetrics polling | Non-empty metrics payload |
 | `etag_conflict` | Range read + stale ETag PATCH | Stale write returns 412, not silent overwrite |
 
+### Windows (PowerShell)
+
 ```powershell
 $env:LOCUST_SCENARIO = "health_read"
 $env:QUMULO_USER = "admin"
@@ -109,9 +173,23 @@ locust -f tests/rest/locust/locustfile.py `
   --csv evidence/locust-health
 ```
 
+### Linux (Ubuntu)
+
+```bash
+export LOCUST_SCENARIO="health_read"
+export QUMULO_USER="admin"
+export QUMULO_PASSWORD="***"
+locust -f tests/rest/locust/locustfile.py \
+  --host https://your-cluster:8000 \
+  --headless -u 10 -r 2 -t 60s \
+  --csv evidence/locust-health
+```
+
 ## Docker profiles
 
-```powershell
+Install [Docker Engine and the Compose plugin](https://docs.docker.com/engine/install/ubuntu/) on Ubuntu. You may need `sudo` or membership in the `docker` group.
+
+```bash
 # Offline unit + REST contract tests
 docker compose run --rm test-offline
 
@@ -129,12 +207,40 @@ The `protocols` image profile mounts NFS (`QUMULO_NFS_EXPORT`) and SMB (`QUMULO_
 
 ## Running live pytest
 
+### Windows (PowerShell)
+
 ```powershell
 $env:RESILIENCE_ENABLE_LIVE_TESTS = "true"
 $env:RESILIENCE_ACK_DISPOSABLE_TARGET = "true"
 $env:RESILIENCE_ENV_LABEL = "disposable-vm"
 pytest tests/s3 tests/nfs tests/smb tests/cross_protocol -m live -v
 ```
+
+### Linux (Ubuntu)
+
+```bash
+export RESILIENCE_ENABLE_LIVE_TESTS=true
+export RESILIENCE_ACK_DISPOSABLE_TARGET=true
+export RESILIENCE_ENV_LABEL=disposable-vm
+pytest tests/s3 tests/nfs tests/smb tests/cross_protocol -m live -v
+```
+
+## Native Linux live NFS/SMB
+
+For bare-metal Ubuntu protocol tests (outside Docker):
+
+1. Install mount utilities: `./scripts/setup_ubuntu.sh --protocols` (or `sudo apt-get install nfs-common cifs-utils`).
+2. Configure `.env` from [`.env.example`](.env.example).
+3. Run tests through the mount wrapper (requires root for `mount`):
+
+```bash
+sudo -E env $(grep -v '^#' .env | xargs) \
+  RESILIENCE_ENABLE_LIVE_TESTS=true \
+  ./scripts/mount_protocols.sh \
+  pytest tests/nfs tests/smb tests/cross_protocol -m live -v
+```
+
+Alternatively, mount exports manually to `RESILIENCE_NFS_MOUNT` / `RESILIENCE_SMB_MOUNT`, then run pytest without the wrapper. Settings require the mount paths to exist before live NFS/SMB tests run.
 
 ## Expected offline behavior
 
@@ -147,6 +253,9 @@ pytest tests/s3 tests/nfs tests/smb tests/cross_protocol -m live -v
 | Issue | Fix |
 |-------|-----|
 | PowerShell `Activate.ps1` blocked | Run `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`, or use `Bypass -Scope Process`, or call `.\.venv\Scripts\python.exe` directly |
+| `python3-venv` missing (Linux) | `sudo apt-get install python3-venv` |
+| NFS/SMB skips on bare metal (Linux) | Install `nfs-common` / `cifs-utils`, ensure mount paths exist, or use `mount_protocols.sh` with sudo |
+| Docker permission denied (Linux) | Add user to `docker` group or prefix commands with `sudo` |
 | SDK/API version mismatch | `pip install qumulo-api==<Core version>` |
 | NFS/SMB skips in container | Use `test-live-protocols` profile with `SYS_ADMIN` and valid export/share |
 | Locust login failures | Verify `QUMULO_USER`/`QUMULO_PASSWORD` and REST port 8000 |

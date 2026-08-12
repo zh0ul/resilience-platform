@@ -8,8 +8,10 @@ Directories marked **implemented** contain code today; **planned** directories e
 |---|---|---|
 | `src/` | implemented | Python package root; installed editable via `pip install -e ".[dev]"` for local development and Docker test images. |
 | `src/resilience_platform/` | implemented | Shared library used by pytest, Locust, and the CLI: typed settings, disposable-environment safety guards, Qumulo REST client wrappers, fixture helpers, checksum utilities, retry logic, and evidence writers. Exposes the `resilience-preflight` entrypoint. |
-| `scripts/` | implemented | Operational shell helpers for containerized and CI test runs—not part of the installable Python package. |
-| `scripts/mount_protocols.sh` | implemented | Entrypoint wrapper for the Docker `protocols` profile: mounts NFS and SMB fixture paths from environment variables, registers signal-safe unmount on exit, then execs the test command. |
+| `scripts/` | implemented | Operational shell helpers for containerized, CI, and local Ubuntu dev runs—not part of the installable Python package. |
+| `scripts/setup_ubuntu.sh` | implemented | Ubuntu dev bootstrap: installs Python tooling via apt, creates `.venv`, and runs `pip install -e ".[dev]"`. Optional `--protocols` flag adds NFS/SMB mount packages. |
+| `scripts/run_offline_checks.sh` | implemented | Convenience wrapper that runs offline pytest, ruff, and mypy using the project venv. |
+| `scripts/mount_protocols.sh` | implemented | Entrypoint wrapper for the Docker `protocols` profile (and bare-metal Linux): mounts NFS and SMB fixture paths from environment variables, registers signal-safe unmount on exit, then execs the test command. |
 | `tests/` | implemented | Test suite organized by protocol and run mode (offline by default; live integration opt-in). |
 | `tests/unit/` | implemented | Offline pytest coverage for settings, safety gates, and checksum helpers—runs without a cluster. |
 | `tests/rest/` | implemented | REST control-plane tests targeting Qumulo Core HTTPS API (port 8000): mocked contract tests run offline; Locust scenarios require a live cluster. |
@@ -39,7 +41,9 @@ resilience-platform/
 ├── src/
 │   └── resilience_platform/     # shared Python library + CLI
 ├── scripts/
-│   └── mount_protocols.sh       # NFS/SMB mount wrapper for Docker
+│   ├── setup_ubuntu.sh          # Ubuntu dev bootstrap
+│   ├── run_offline_checks.sh    # offline pytest + lint wrapper
+│   └── mount_protocols.sh       # NFS/SMB mount wrapper for Docker / bare metal
 ├── tests/
 │   ├── unit/                    # offline safety, settings, checksums
 │   ├── rest/
