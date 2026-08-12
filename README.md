@@ -1,4 +1,4 @@
-# The Non-Official Resilience Platform for Qumulo
+# The Unofficial Resilience Platform for Qumulo
 
 Professional-grade example tests for the Qumulo Core REST control plane (Locust + pytest), S3, NFS, SMB, and cross-protocol namespace consistency. Offline contract tests run by default; live integration tests require explicit opt-in against a **disposable** cluster.
 
