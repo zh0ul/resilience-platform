@@ -2,24 +2,42 @@
 
 Professional-grade example tests for the Qumulo Core REST control plane (Locust + pytest), S3, NFS, SMB, and cross-protocol namespace consistency. Offline contract tests run by default; live integration tests require explicit opt-in against a **disposable** cluster.
 
-Based on the [90-day proposal](Qumulo_Systems_Resilience_Research_and_90_Day_Proposal.md) and the official [Qumulo API introduction](https://github.com/Qumulo/qumulo-api-introduction).
+Based on the official [Qumulo API introduction](https://github.com/Qumulo/qumulo-api-introduction).
 
 ## Quick start
 
 ```powershell
 cd d:\VSCode-Projects\resilience-platform
 python -m venv .venv
+
+# Option A (recommended): allow local scripts for your user account only
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 .\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-pip install -e ".[dev]"
+
+# Option B: activate for this PowerShell window only (no permanent policy change)
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
+.\.venv\Scripts\Activate.ps1
+
+# Option C: skip activation and call the venv directly
+.\.venv\Scripts\python.exe -m pip install -e ".[dev]"
 
 # Offline tests (default — no cluster required)
-pytest tests/unit tests/rest -v
+.\.venv\Scripts\pytest.exe tests/unit tests/rest -v
 
 # Lint and type check
-ruff check src tests
-mypy src
+.\.venv\Scripts\ruff.exe check src tests
+.\.venv\Scripts\mypy.exe src
 ```
+
+If `Activate.ps1` is blocked, you can also use **Command Prompt** instead of PowerShell:
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+Example offline run (14 unit + REST contract tests):
+
+![Offline pytest run — 14 passed](resilience-platform-testing-001.png)
 
 ## Install Qumulo SDK
 
@@ -128,7 +146,7 @@ pytest tests/s3 tests/nfs tests/smb tests/cross_protocol -m live -v
 
 | Issue | Fix |
 |-------|-----|
-| SSL errors against lab cluster | Set `QUMULO_CA_BUNDLE` to lab CA PEM path |
+| PowerShell `Activate.ps1` blocked | Run `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`, or use `Bypass -Scope Process`, or call `.\.venv\Scripts\python.exe` directly |
 | SDK/API version mismatch | `pip install qumulo-api==<Core version>` |
 | NFS/SMB skips in container | Use `test-live-protocols` profile with `SYS_ADMIN` and valid export/share |
 | Locust login failures | Verify `QUMULO_USER`/`QUMULO_PASSWORD` and REST port 8000 |
