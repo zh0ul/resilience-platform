@@ -4,42 +4,6 @@ Professional-grade example tests for the Qumulo Core REST control plane (Locust 
 
 Based on the official [Qumulo API introduction](https://github.com/Qumulo/qumulo-api-introduction).
 
-## Install Qumulo SDK
-
-The project depends on `qumulo-api` (includes the `qq` CLI). Pin to your cluster Core version when needed. Project settings use `QUMULO_*` variable names (see [`.env.example`](.env.example)); the examples below use `API_*` names as in the official qq CLI docs.
-
-### Windows (PowerShell)
-
-```powershell
-pip install "qumulo-api==7.9.2.1"
-```
-
-Verify connectivity:
-
-```powershell
-$env:API_HOSTNAME = "your-cluster"
-$env:API_USER = "admin"
-$env:API_PASSWORD = "***"
-qq --host $env:API_HOSTNAME login -u $env:API_USER -p $env:API_PASSWORD
-qq --host $env:API_HOSTNAME fs_get_stats
-```
-
-### Linux (Ubuntu)
-
-```bash
-pip install "qumulo-api==7.9.2.1"
-```
-
-Verify connectivity:
-
-```bash
-export API_HOSTNAME="your-cluster"
-export API_USER="admin"
-export API_PASSWORD="***"
-qq --host "$API_HOSTNAME" login -u "$API_USER" -p "$API_PASSWORD"
-qq --host "$API_HOSTNAME" fs_get_stats
-```
-
 ## Quick start
 
 ### Windows (PowerShell)
@@ -109,6 +73,42 @@ Add `--protocols` to `setup_ubuntu.sh` to install `nfs-common` and `cifs-utils` 
 Example offline run (14 unit + REST contract tests):
 
 ![Offline pytest run — 14 passed](docs/resilience-platform-testing-001.png)
+
+## Install Qumulo SDK
+
+The project depends on `qumulo-api` (includes the `qq` CLI). Pin to your cluster Core version when needed. Project settings use `QUMULO_*` variable names (see [`.env.example`](.env.example)); the examples below use `API_*` names as in the official qq CLI docs.
+
+### Windows (PowerShell)
+
+```powershell
+pip install "qumulo-api==7.9.2.1"
+```
+
+Verify connectivity:
+
+```powershell
+$env:API_HOSTNAME = "your-cluster"
+$env:API_USER = "admin"
+$env:API_PASSWORD = "***"
+qq --host $env:API_HOSTNAME login -u $env:API_USER -p $env:API_PASSWORD
+qq --host $env:API_HOSTNAME fs_get_stats
+```
+
+### Linux (Ubuntu)
+
+```bash
+pip install "qumulo-api==7.9.2.1"
+```
+
+Verify connectivity:
+
+```bash
+export API_HOSTNAME="your-cluster"
+export API_USER="admin"
+export API_PASSWORD="***"
+qq --host "$API_HOSTNAME" login -u "$API_USER" -p "$API_PASSWORD"
+qq --host "$API_HOSTNAME" fs_get_stats
+```
 
 ## Safety gates (live tests)
 
