@@ -4,6 +4,10 @@ Professional-grade example tests for the Qumulo Core REST control plane (Locust 
 
 Based on the official [Qumulo API introduction](https://github.com/Qumulo/qumulo-api-introduction).
 
+Example offline run (14 unit + REST contract tests):
+
+![Offline pytest run — 14 passed](docs/resilience-platform-testing-001.png)
+
 ## Quick start
 
 ### Linux (Ubuntu)
@@ -82,10 +86,6 @@ python -m venv .venv
 .\.venv\Scripts\ruff.exe check src tests
 .\.venv\Scripts\mypy.exe src
 ```
-
-Example offline run (14 unit + REST contract tests):
-
-![Offline pytest run — 14 passed](docs/resilience-platform-testing-001.png)
 
 ## Install Qumulo SDK
 
