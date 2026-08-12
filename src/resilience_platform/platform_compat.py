@@ -7,7 +7,7 @@ import sys
 try:
     import fcntl
 except ImportError:
-    fcntl = None  # type: ignore[assignment,misc]
+    fcntl = None  # type: ignore[assignment]
 
 IS_LINUX = sys.platform.startswith("linux")
 HAS_FCNTL = fcntl is not None

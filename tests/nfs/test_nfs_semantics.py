@@ -8,9 +8,9 @@ import uuid
 from pathlib import Path
 
 import pytest
-from resilience_platform.platform_compat import HAS_FCNTL, fcntl
 
 from resilience_platform.checksums import deterministic_payload, sha256_hex
+from resilience_platform.platform_compat import HAS_FCNTL, fcntl
 from resilience_platform.retry import poll_until
 from resilience_platform.settings import Settings
 
