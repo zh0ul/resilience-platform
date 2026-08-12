@@ -1,0 +1,69 @@
+services:
+  # Offline/unit + mocked REST tests (default)
+  test-offline:
+    build:
+      context: .
+      target: base
+    environment:
+      RESILIENCE_ENABLE_LIVE_TESTS: "false"
+    command: ["pytest", "tests/unit", "tests/rest", "-v"]
+    volumes:
+      - ./evidence:/app/evidence
+
+  # REST + S3 live tests (no privileged mounts)
+  test-live-rest-s3:
+    build:
+      context: .
+      target: base
+    env_file:
+      - .env
+    environment:
+      RESILIENCE_ENABLE_LIVE_TESTS: "true"
+      RESILIENCE_ACK_DISPOSABLE_TARGET: "true"
+    command: ["pytest", "tests/rest", "tests/s3", "-m", "live", "-v"]
+    volumes:
+      - ./evidence:/app/evidence
+
+  # Full protocol suite with NFS/SMB mounts (requires privileged + .env)
+  test-live-protocols:
+    build:
+      context: .
+      target: protocols
+    env_file:
+      - .env
+    environment:
+      RESILIENCE_ENABLE_LIVE_TESTS: "true"
+      RESILIENCE_ACK_DISPOSABLE_TARGET: "true"
+    cap_add:
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    devices:
+      - /dev/fuse
+    command: ["pytest", "tests/nfs", "tests/smb", "tests/cross_protocol", "-m", "live", "-v"]
+    volumes:
+      - ./evidence:/app/evidence
+
+  locust-health:
+    build:
+      context: .
+      target: base
+    env_file:
+      - .env
+    environment:
+      LOCUST_SCENARIO: health_read
+    command:
+      - locust
+      - -f
+      - tests/rest/locust/locustfile.py
+      - --headless
+      - -u
+      - "10"
+      - -r
+      - "2"
+      - -t
+      - 60s
+      - --csv
+      - /app/evidence/locust-health
+    volumes:
+      - ./evidence:/app/evidence

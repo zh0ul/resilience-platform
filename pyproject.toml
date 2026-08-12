@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "resilience-platform"
+version = "0.1.0"
+description = "Customer-workload resilience test platform for Qumulo Core"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Resilience Platform Team" }]
+dependencies = [
+    "qumulo-api>=4.0.0",
+    "boto3>=1.34.0",
+    "requests>=2.31.0",
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    "tenacity>=8.2.0",
+    "smbprotocol>=1.13.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.5.0",
+    "locust>=2.24.0",
+    "responses>=0.25.0",
+    "ruff>=0.3.0",
+    "mypy>=1.9.0",
+    "types-requests>=2.31.0",
+    "boto3-stubs[s3]>=1.34.0",
+]
+
+[project.scripts]
+resilience-preflight = "resilience_platform.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src"]
+markers = [
+    "live: requires a disposable Qumulo cluster (skipped by default)",
+    "rest: REST control-plane integration tests",
+    "s3: S3-compatible data-path tests",
+    "nfs: NFS data-path tests",
+    "smb: SMB data-path tests",
+    "cross_protocol: multiprotocol namespace consistency tests",
+    "destructive: mutates cluster state; requires explicit opt-in",
+]
+addopts = "-ra --strict-markers -m 'not live'"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+packages = ["resilience_platform"]
