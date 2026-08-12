@@ -91,7 +91,7 @@ python -m venv .venv
 
 The project depends on `qumulo-api` (includes the `qq` CLI). Pin to your cluster Core version when needed. Project settings use `QUMULO_*` variable names (see [`.env.example`](.env.example)); the examples below use `API_*` names as in the official qq CLI docs.
 
-### Linux (Ubuntu)
+### Linux (Ubuntu) 
 
 ```bash
 pip install "qumulo-api==7.9.2.1"
